@@ -125,7 +125,7 @@ impl Display for Tuple {
 mod tests {
     use float_cmp::approx_eq;
 
-    use super::Tuple;
+    use super::*;
 
     #[test]
     fn new_point_sets_members() {
