@@ -1,8 +1,8 @@
-use std::ops::{self};
+use std::{ops::{self}, fmt::Display};
 
 use float_cmp::approx_eq;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Tuple {
     x: f64,
     y: f64,
@@ -21,6 +21,18 @@ impl Tuple {
 
     pub fn vector(x: f64, y: f64, z: f64) -> Tuple {
         Self::new(x, y, z, 0.0)
+    }
+
+    pub fn x(&self) -> f64 {
+        self.x
+    }
+
+    pub fn y(&self) -> f64 {
+        self.y
+    }
+
+    pub fn z(&self) -> f64 {
+        self.z
     }
 
     pub fn is_point(&self) -> bool {
@@ -62,18 +74,18 @@ impl PartialEq for Tuple {
     }
 }
 
-impl ops::Add for Tuple {
+impl ops::Add<&Tuple> for Tuple {
     type Output = Tuple;
 
-    fn add(self, rhs: Self) -> Self::Output {
-        Self { x: self.x + rhs.x, y: self.y + rhs.y, z: self.z + rhs.z, w: self.w + rhs.w }
+    fn add(self, rhs: &Self) -> Self::Output {
+        Tuple { x: self.x + rhs.x, y: self.y + rhs.y, z: self.z + rhs.z, w: self.w + rhs.w }
     }
 }
 
-impl ops::Sub for Tuple {
+impl ops::Sub<&Tuple> for Tuple {
     type Output = Tuple;
 
-    fn sub(self, rhs: Self) -> Self::Output {
+    fn sub(self, rhs: &Self) -> Self::Output {
         Self { x: self.x - rhs.x, y: self.y - rhs.y, z: self.z - rhs.z, w: self.w - rhs.w }
     }
 }
@@ -99,6 +111,13 @@ impl ops::Div<f64> for Tuple {
 
     fn div(self, rhs: f64) -> Self::Output {
         Self { x: self.x / rhs, y: self.y / rhs, z: self.z / rhs, w: self.w / rhs }
+    }
+}
+
+impl Display for Tuple {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let t = if self.is_point() { "point" } else { "vector" };
+        write!(f, "{} [{:.6}, {:.6}, {:.6}, {:.6}]", t, self.x, self.y, self.z, self.w)
     }
 }
 
@@ -146,7 +165,7 @@ mod tests {
     fn add_adds_memebers() {
         let a1 = Tuple::new(3.0, -2.0, 5.0, 1.0);
         let a2 = Tuple::new(-2.0, 3.0, 1.0, 0.0);
-        let a3 = a1 + a2;
+        let a3 = a1 + &a2;
         assert_eq!(a3, Tuple::new(1.0, 1.0, 6.0, 1.0));
     }
 
@@ -154,7 +173,7 @@ mod tests {
     fn subtract_points_creates_vector() {
         let a1 = Tuple::point(3.0, 2.0, 1.0);
         let a2 = Tuple::point(5.0, 6.0, 7.0);
-        let a3 = a1 - a2;
+        let a3 = a1 - &a2;
         assert_eq!(a3, Tuple::vector(-2.0, -4.0, -6.0));
     }
 
@@ -162,7 +181,7 @@ mod tests {
     fn substract_vector_from_point_creates_point() {
         let p = Tuple::point(3.0, 2.0, 1.0);
         let v = Tuple::vector(5.0, 6.0, 7.0);
-        let a3 = p - v;
+        let a3 = p - &v;
         assert_eq!(a3, Tuple::point(-2.0, -4.0, -6.0));
     }
 
@@ -170,7 +189,7 @@ mod tests {
     fn subtract_vectors_creates_vector() {
         let v1 = Tuple::vector(3.0, 2.0, 1.0);
         let v2 = Tuple::vector(5.0, 6.0, 7.0);
-        let a3 = v1 - v2;
+        let a3 = v1 - &v2;
         assert_eq!(a3, Tuple::vector(-2.0, -4.0, -6.0));
     }
 
@@ -178,7 +197,7 @@ mod tests {
     fn subtract_vector_from_zero_vector_creates_vector() {
         let zero = Tuple::vector(0.0, 0.0, 0.0);
         let v = Tuple::vector(1.0, -2.0, 3.0);
-        let a3 = zero - v;
+        let a3 = zero - &v;
         assert_eq!(a3, Tuple::vector(-1.0, 2.0, -3.0));
     }
 
