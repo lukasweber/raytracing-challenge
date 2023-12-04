@@ -129,7 +129,10 @@ mod tests {
 
     #[test]
     fn new_point_sets_members() {
+        // When
         let a = Tuple::new(4.3, -4.2, 3.1, 1.0);
+
+        // Then
         assert!(approx_eq!(f64, a.x, 4.3, epsilon=0.00001));
         assert!(approx_eq!(f64, a.y, -4.2, epsilon=0.00001));
         assert!(approx_eq!(f64, a.z, 3.1, epsilon=0.00001));
@@ -140,7 +143,10 @@ mod tests {
 
     #[test]
     fn new_vector_sets_members() {
+        // When
         let a = Tuple::new(4.3, -4.2, 3.1, 0.0);
+
+        // Then
         assert!(approx_eq!(f64, a.x, 4.3, epsilon=0.00001));
         assert!(approx_eq!(f64, a.y, -4.2, epsilon=0.00001));
         assert!(approx_eq!(f64, a.z, 3.1, epsilon=0.00001));
@@ -151,81 +157,132 @@ mod tests {
 
     #[test]
     fn point_creates_tuple() {
+        // When
         let p = Tuple::point(4.0, -4.0, 3.0);
+
+        // Then
         assert_eq!(p, Tuple::new(4.0, -4.0, 3.0, 1.0));
     }
 
     #[test]
     fn vector_creates_tuple() {
+        // When
         let v = Tuple::vector(4.0, -4.0, 3.0);
+
+        // Then
         assert_eq!(v, Tuple::new(4.0, -4.0, 3.0, 0.0));
     }
 
     #[test]
     fn add_adds_memebers() {
+        // Given
         let a1 = Tuple::new(3.0, -2.0, 5.0, 1.0);
         let a2 = Tuple::new(-2.0, 3.0, 1.0, 0.0);
+
+        // When
         let a3 = a1 + &a2;
+
+        // Then
         assert_eq!(a3, Tuple::new(1.0, 1.0, 6.0, 1.0));
     }
 
     #[test]
     fn subtract_points_creates_vector() {
+        // Given
         let a1 = Tuple::point(3.0, 2.0, 1.0);
         let a2 = Tuple::point(5.0, 6.0, 7.0);
+
+        // When
         let a3 = a1 - &a2;
+
+        // Then
         assert_eq!(a3, Tuple::vector(-2.0, -4.0, -6.0));
     }
 
     #[test]
     fn substract_vector_from_point_creates_point() {
+        // Given
         let p = Tuple::point(3.0, 2.0, 1.0);
         let v = Tuple::vector(5.0, 6.0, 7.0);
+
+        // When
         let a3 = p - &v;
+
+        // Then
         assert_eq!(a3, Tuple::point(-2.0, -4.0, -6.0));
     }
 
     #[test]
     fn subtract_vectors_creates_vector() {
+        // Given
         let v1 = Tuple::vector(3.0, 2.0, 1.0);
         let v2 = Tuple::vector(5.0, 6.0, 7.0);
+
+        // When
         let a3 = v1 - &v2;
+
+        // Then
         assert_eq!(a3, Tuple::vector(-2.0, -4.0, -6.0));
     }
 
     #[test]
     fn subtract_vector_from_zero_vector_creates_vector() {
+        // Given
         let zero = Tuple::vector(0.0, 0.0, 0.0);
         let v = Tuple::vector(1.0, -2.0, 3.0);
+
+        // When
         let a3 = zero - &v;
+
+        // Then
         assert_eq!(a3, Tuple::vector(-1.0, 2.0, -3.0));
     }
 
     #[test]
     fn negate_tuple() {
+        // Given
         let a = Tuple::new(1.0, -2.0, 3.0, -4.0);
+
+        // When
         let a2 = -a;
+
+        // Then
         assert_eq!(a2, Tuple::new(-1.0, 2.0, -3.0, 4.0));
     }
 
     #[test]
     fn mul_scalar_sets_members() {
+        // Given
         let a = Tuple::new(1.0, -2.0, 3.0, -4.0);
+
+        // When
         let a2 = a * 3.5;
+
+        // Then
         assert_eq!(a2, Tuple::new(3.5, -7.0, 10.5, -14.0))
     }
 
     #[test]
     fn mul_fraction_sets_members() {
+        // Given
         let a = Tuple::new(1.0, -2.0, 3.0, -4.0);
+
+        // When
         let a2 = a * 0.5;
+
+        // Then
         assert_eq!(a2, Tuple::new(0.5, -1.0, 1.5, -2.0))
     }
 
     #[test]
     fn div_scalar_sets_members() {
+        // Given
         let a = Tuple::new(1.0, -2.0, 3.0, -4.0);
+
+        // When
         let a2 = a / 2.0;
+
+        // Then
         assert_eq!(a2, Tuple::new(0.5, -1.0, 1.5, -2.0))
     }
 
@@ -255,15 +312,21 @@ mod tests {
 
     #[test]
     fn dot_product_calculates_correctly() {
+        // Given
         let a = Tuple::vector(1.0, 2.0, 3.0);
         let b = Tuple::vector(2.0, 3.0, 4.0);
+
+        // When & Then
         assert_eq!(a.dot(&b), 20.0);
     }
 
     #[test]
     fn cross_product_calculates_correctly() {
+        // Given
         let a = Tuple::vector(1.0, 2.0, 3.0);
         let b = Tuple::vector(2.0, 3.0, 4.0);
+
+        // When & Then
         assert_eq!(a.cross(&b), Tuple::vector(-1.0, 2.0, -1.0));
         assert_eq!(b.cross(&a), Tuple::vector(1.0, -2.0, 1.0));
     }
