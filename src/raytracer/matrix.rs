@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn index_create_4x4_matrix() {
+    fn index_4x4_matrix_reads_values() {
         // Given & When
         let m = Matrix::from_values(4, 4, vec![
             1.0, 2.0, 3.0, 4.0, 
@@ -119,7 +119,7 @@ mod tests {
     }
 
     #[test]
-    fn index_mut_create_2x2_matrix() {
+    fn index_mut_2x2_matrix_assigns_values() {
         // Given
         let mut m = Matrix::new(2, 2);
 
@@ -137,7 +137,7 @@ mod tests {
     }
 
     #[test]
-    fn index_create_3x3_matrix() {
+    fn index_3x3_matrix_reads_values() {
         // Given
         let m = Matrix::from_values(3, 3, vec![
             -3.0, 5.0, 0.0, 
