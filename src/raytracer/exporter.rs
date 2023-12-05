@@ -18,14 +18,16 @@ impl PPMExporter {
 
 impl Exporter for PPMExporter {
     fn export(&self, canvas: &canvas::Canvas, writer: &mut dyn Write) -> std::io::Result<()> {
-        let pixels = canvas.pixels();
-        let mut current_line_length = 0;
+        let mut buf = itoa::Buffer::new();
+        
         writer.write_all(format!("P3\n{} {}\n255\n", canvas.width(), canvas.height()).as_bytes())?;
-        for el in pixels.iter() {
 
+        let mut current_line_length = 0;
+        let pixels = canvas.pixels();
+        for el in pixels.iter() {
             let colors: [u8; 3] = [get_out_val(el.red()), get_out_val(el.green()), get_out_val(el.blue())];
             for color in colors.iter() {
-                writer.write_all(format!("{}", color).as_bytes())?;
+                writer.write_all(buf.format(*color).as_bytes())?;
                 if (current_line_length + 1) % (canvas.width() * 3) == 0 || current_line_length + 1 >= MAX_PPM_LINE_LENGTH {
                     writer.write_all(b"\n")?;
                     current_line_length = 0;
@@ -40,12 +42,10 @@ impl Exporter for PPMExporter {
 }
 
 fn get_out_val(px: f64) -> u8 {
-    if px <= 0.0 {
-        return 0;
-    } else if px >= 1.0 {
-        return 255;
-    } else {
-        return (px * 255.0).round() as u8;
+    match px {
+        px if px <= 0.0 => 0,
+        px if px >= 1.0 => 255,
+        px => (px * 255.0).round() as u8,
     }
 }
 
