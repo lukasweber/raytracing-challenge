@@ -17,6 +17,39 @@ pub fn scaling(x: f64, y: f64, z: f64) -> Matrix {
     out
 }
 
+pub fn rotation_x(radians: f64) -> Matrix {
+    let mut out = Matrix::new(4,4);
+    out[(0, 0)] = 1.0;
+    out[(1, 1)] = radians.cos();
+    out[(1, 2)] = -radians.sin();
+    out[(2, 1)] = radians.sin();
+    out[(2, 2)] = radians.cos();
+    out[(3, 3)] = 1.0;
+    out
+}
+
+pub fn rotation_y(radians: f64) -> Matrix {
+    let mut out = Matrix::new(4,4);
+    out[(0, 0)] = radians.cos();
+    out[(0, 2)] = radians.sin();
+    out[(2, 0)] = -radians.sin();
+    out[(1, 1)] = 1.0;
+    out[(2, 2)] = radians.cos();
+    out[(3, 3)] = 1.0;
+    out
+}
+
+pub fn rotation_z(radians: f64) -> Matrix {
+    let mut out = Matrix::new(4,4);
+    out[(0, 0)] = radians.cos();
+    out[(0, 1)] = -radians.sin();
+    out[(1, 0)] = radians.sin();
+    out[(1, 1)] = radians.cos();
+    out[(2, 2)] = 1.0;
+    out[(3, 3)] = 1.0;
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use crate::raytracer::tuple::Tuple;
@@ -114,5 +147,67 @@ mod tests {
 
         // Then
         assert_eq!(p2, Tuple::point(-2.0, 3.0, 4.0));
+    }
+
+    #[test]
+    fn rotate_point_around_x_axis() {
+        // Given
+        let p = Tuple::point(0.0, 1.0, 0.0);
+        let half_quarter = rotation_x(std::f64::consts::PI / 4.0);
+        let full_quarter = rotation_x(std::f64::consts::PI / 2.0);
+
+        // When
+        let p2 = &half_quarter * &p;
+        let p3 = &full_quarter * &p;
+
+        // Then
+        assert_eq!(p2, Tuple::point(0.0, 2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0));
+        assert_eq!(p3, Tuple::point(0.0, 0.0, 1.0));
+    }
+
+    #[test]
+    fn inverse_of_x_rotation_rotates_in_opposite_direction() {
+        // Given
+        let p = Tuple::point(0.0, 1.0, 0.0);
+        let half_quarter = rotation_x(std::f64::consts::PI / 4.0);
+        let inv = half_quarter.inverse();
+
+        // When
+        let p2 = &inv * &p;
+
+        // Then
+        assert_eq!(p2, Tuple::point(0.0, 2.0_f64.sqrt() / 2.0, -2.0_f64.sqrt() / 2.0));
+    }
+
+    #[test]
+    fn rotate_point_around_y_axis() {
+        // Given
+        let p = Tuple::point(0.0, 0.0, 1.0);
+        let half_quarter = rotation_y(std::f64::consts::PI / 4.0);
+        let full_quarter = rotation_y(std::f64::consts::PI / 2.0);
+
+        // When
+        let p2 = &half_quarter * &p;
+        let p3 = &full_quarter * &p;
+
+        // Then
+        assert_eq!(p2, Tuple::point(2.0_f64.sqrt() / 2.0, 0.0, 2.0_f64.sqrt() / 2.0));
+        assert_eq!(p3, Tuple::point(1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    pub fn rotate_point_arround_z_axis() {
+        // Given
+        let p = Tuple::point(0.0, 1.0, 0.0);
+        let half_quarter = rotation_z(std::f64::consts::PI / 4.0);
+        let full_quarter = rotation_z(std::f64::consts::PI / 2.0);
+
+        // When
+        let p2 = &half_quarter * &p;
+        let p3 = &full_quarter * &p;
+
+        // Then
+        assert_eq!(p2, Tuple::point(-2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0, 0.0));
+        assert_eq!(p3, Tuple::point(-1.0, 0.0, 0.0));
     }
 }
