@@ -20,12 +20,69 @@ impl Matrix {
         Self { height, width, values }
     }
 
+    pub fn identity(height: usize, width: usize) -> Self {
+        let mut m = Self::new(height, width);
+        for i in 0..height {
+            m[(i, i)] = 1.0;
+        }
+        m
+    }
+
     pub fn height(&self) -> usize {
         self.height
     }
 
     pub fn width(&self) -> usize {
         self.width
+    }
+
+    pub fn transpose(&self) -> Self {
+        let mut out = Matrix::new(self.width, self.height);
+        for y in 0..self.height() {
+            for x in 0..self.width() {
+                out[(x, y)] = self[(y, x)]
+            }
+        }
+        out
+    }
+
+    pub fn determinant(&self) -> f64 {
+        if self.height() != self.width() {
+            panic!("Can't calculate the determinant of a non-square matrix");
+        }
+
+        if self.height() == 2 {
+            return (self.values[0] * self.values[3]) - (self.values[1] * self.values[2]);
+        }
+
+        let mut out = 0.0;
+        for x in 0..self.width() {
+            out += self.values[x] * self.cofactor(0, x)
+        }
+        out
+    }
+
+    pub fn submatrix(&self, row: usize, column: usize) -> Self {
+        // B
+        let values = self.values.iter()
+            .enumerate()
+            .filter(|(i, _)| i / self.width() != row && i % self.width() != column)
+            .map(|(_, v)| *v)
+            .collect();
+        let out = Matrix::from_values(self.height() - 1, self.width() - 1, values);
+        out
+    }
+
+    pub fn minor(&self, row: usize, column: usize) -> f64 {
+        self.submatrix(row, column).determinant()
+    }
+
+    pub fn cofactor(&self, row: usize, column: usize) -> f64 {
+        let mut out = self.submatrix(row, column).determinant();
+        if (row + column) % 2 == 1 {
+            out *= -1.0;
+        }
+        out
     }
 }
 
@@ -227,5 +284,197 @@ mod tests {
 
         // Then
         assert_eq!(c, Tuple::new(18.0, 24.0, 33.0, 1.0));
-    }    
+    }
+
+    #[test]
+    fn identity_creates_identity_matrix() {
+        // When
+        let m = Matrix::identity(4, 4);
+
+        // Then
+        assert_eq!(m, Matrix::from_values(4, 4, vec![
+            1.0, 0.0, 0.0, 0.0, 
+            0.0, 1.0, 0.0, 0.0, 
+            0.0, 0.0, 1.0, 0.0, 
+            0.0, 0.0, 0.0, 1.0
+        ]));
+    }
+
+    #[test]
+    fn mul_matrix_by_identity_matrix_returns_matrix() {
+        // Given
+        let a = Matrix::from_values(4, 4, vec![
+            0.0, 1.0, 2.0, 4.0, 
+            1.0, 2.0, 4.0, 8.0, 
+            2.0, 4.0, 8.0, 16.0, 
+            4.0, 8.0, 16.0, 32.0
+        ]);
+
+        let b = Matrix::identity(4, 4);
+
+        // When
+        let c = &a * &b;
+
+        // Then
+        assert_eq!(c, Matrix::from_values(4, 4, vec![
+            0.0, 1.0, 2.0, 4.0, 
+            1.0, 2.0, 4.0, 8.0, 
+            2.0, 4.0, 8.0, 16.0, 
+            4.0, 8.0, 16.0, 32.0
+        ]));
+    }
+
+    #[test]
+    fn transpose_transposes_matrix() {
+        // Given
+        let a = Matrix::from_values(4, 4, vec![
+            0.0, 9.0, 3.0, 0.0, 
+            9.0, 8.0, 0.0, 8.0, 
+            1.0, 8.0, 5.0, 3.0, 
+            0.0, 0.0, 5.0, 8.0
+        ]);
+
+        // When
+        let b = a.transpose();
+
+        // Then
+        assert_eq!(b, Matrix::from_values(4, 4, vec![
+            0.0, 9.0, 1.0, 0.0, 
+            9.0, 8.0, 8.0, 0.0, 
+            3.0, 0.0, 5.0, 5.0, 
+            0.0, 8.0, 3.0, 8.0
+        ]));
+    }
+
+    #[test]
+    fn transpose_identity_matrix_is_identity_matrix() {
+        // Given
+        let a = Matrix::identity(4, 4);
+
+        // When
+        let b = a.transpose();
+
+        // Then
+        assert_eq!(b, Matrix::identity(4, 4));
+    }
+
+    #[test]
+    fn determinant_2x2_matrix_calculates_determinant() {
+        // Given
+        let a = Matrix::from_values(2, 2, vec![
+            1.0, 5.0, 
+            -3.0, 2.0
+        ]);
+
+        // When
+        let d = a.determinant();
+
+        // Then
+        assert_eq!(d, 17.0);
+    }
+
+    #[test]
+    fn submatrix_3x3_matrix_extracts_2x2_matrix() {
+        // Given
+        let a = Matrix::from_values(3, 3, vec![
+            1.0, 5.0, 0.0, 
+            -3.0, 2.0, 7.0, 
+            0.0, 6.0, -3.0
+        ]);
+
+        // When
+        let b = a.submatrix(0, 2);
+
+        // Then
+        assert_eq!(b, Matrix::from_values(2, 2, vec![
+            -3.0, 2.0, 
+            0.0, 6.0
+        ]));
+    }
+
+    #[test]
+    fn submatrix_4x4_matrix_extracts_3x3_matrix() {
+        // Given
+        let a = Matrix::from_values(4, 4, vec![
+            -6.0, 1.0, 1.0, 6.0, 
+            -8.0, 5.0, 8.0, 6.0, 
+            -1.0, 0.0, 8.0, 2.0, 
+            -7.0, 1.0, -1.0, 1.0
+        ]);
+
+        // When
+        let b = a.submatrix(2, 1);
+
+        // Then
+        assert_eq!(b, Matrix::from_values(3, 3, vec![
+            -6.0, 1.0, 6.0, 
+            -8.0, 8.0, 6.0, 
+            -7.0, -1.0, 1.0
+        ]));
+    }
+
+    #[test]
+    fn minor_3x3_matrix_calculates_minor() {
+        // Given
+        let a = Matrix::from_values(3, 3, vec![
+            3.0, 5.0, 0.0, 
+            2.0, -1.0, -7.0, 
+            6.0, -1.0, 5.0
+        ]);
+        let b = a.submatrix(1, 0);
+
+        // Then
+        assert_eq!(b.determinant(), 25.0);
+        assert_eq!(a.minor(1, 0), 25.0);
+    }
+
+    #[test]
+    fn cofactor_3x3_matrix_calculates_cofactor() {
+        // Given
+        let a = Matrix::from_values(3, 3, vec![
+            3.0, 5.0, 0.0, 
+            2.0, -1.0, -7.0, 
+            6.0, -1.0, 5.0
+        ]);
+
+        // Then
+        assert_eq!(a.minor(0, 0), -12.0);
+        assert_eq!(a.cofactor(0, 0), -12.0);
+        assert_eq!(a.minor(1, 0), 25.0);
+        assert_eq!(a.cofactor(1, 0), -25.0);
+    }
+
+    #[test]
+    fn determinant_3x3_matrix_calculates_determinant() {
+        // Given
+        let a = Matrix::from_values(3, 3, vec![
+            1.0, 2.0, 6.0, 
+            -5.0, 8.0, -4.0, 
+            2.0, 6.0, 4.0
+        ]);
+
+        // Then
+        assert_eq!(a.cofactor(0, 0), 56.0);
+        assert_eq!(a.cofactor(0, 1), 12.0);
+        assert_eq!(a.cofactor(0, 2), -46.0);
+        assert_eq!(a.determinant(), -196.0);
+    }
+
+    #[test]
+    fn determinant_4x4_matrix_calculates_determinant() {
+        // Given
+        let a = Matrix::from_values(4, 4, vec![
+            -2.0, -8.0, 3.0, 5.0, 
+            -3.0, 1.0, 7.0, 3.0, 
+            1.0, 2.0, -9.0, 6.0, 
+            -6.0, 7.0, 7.0, -9.0
+        ]);
+
+        // Then
+        assert_eq!(a.cofactor(0, 0), 690.0);
+        assert_eq!(a.cofactor(0, 1), 447.0);
+        assert_eq!(a.cofactor(0, 2), 210.0);
+        assert_eq!(a.cofactor(0, 3), 51.0);
+        assert_eq!(a.determinant(), -4071.0);
+    }
 }
