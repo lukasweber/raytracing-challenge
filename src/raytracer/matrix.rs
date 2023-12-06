@@ -38,38 +38,21 @@ impl Matrix {
 
     pub fn transpose(&self) -> Self {
         let mut out = Matrix::new(self.width, self.height);
-        for y in 0..self.height() {
-            for x in 0..self.width() {
+        for y in 0..self.height {
+            for x in 0..self.width {
                 out[(x, y)] = self[(y, x)]
             }
         }
         out
     }
 
-    pub fn determinant(&self) -> f64 {
-        if self.height() != self.width() {
-            panic!("Can't calculate the determinant of a non-square matrix");
-        }
-
-        if self.height() == 2 {
-            return (self.values[0] * self.values[3]) - (self.values[1] * self.values[2]);
-        }
-
-        let mut out = 0.0;
-        for x in 0..self.width() {
-            out += self.values[x] * self.cofactor(0, x)
-        }
-        out
-    }
-
     pub fn submatrix(&self, row: usize, column: usize) -> Self {
-        // B
         let values = self.values.iter()
             .enumerate()
-            .filter(|(i, _)| i / self.width() != row && i % self.width() != column)
+            .filter(|(i, _)| i / self.width != row && i % self.width != column)
             .map(|(_, v)| *v)
             .collect();
-        let out = Matrix::from_values(self.height() - 1, self.width() - 1, values);
+        let out = Matrix::from_values(self.height - 1, self.width - 1, values);
         out
     }
 
@@ -83,6 +66,37 @@ impl Matrix {
             out *= -1.0;
         }
         out
+    }
+
+    pub fn determinant(&self) -> f64 {
+        if self.height != self.width {
+            panic!("Can't calculate the determinant of a non-square matrix");
+        }
+
+        if self.height == 2 {
+            return (self.values[0] * self.values[3]) - (self.values[1] * self.values[2]);
+        }
+
+        let mut out = 0.0;
+        for x in 0..self.width {
+            out += self.values[x] * self.cofactor(0, x)
+        }
+        out
+    }
+
+    pub fn is_invertible(&self) -> bool {
+        self.determinant() != 0.0
+    }
+
+    pub fn inverse(&self) -> Self {
+        let mut cofactor_matrix = Matrix::new(self.height, self.width);
+        for y in 0..self.height {
+            for x in 0..self.width {
+                cofactor_matrix[(y, x)] = self.cofactor(y, x)
+            }
+        }
+        let cofactor_matrix_t = cofactor_matrix.transpose();
+        &cofactor_matrix_t * (1.0 / self.determinant())
     }
 }
 
@@ -114,11 +128,11 @@ impl Mul<&Matrix> for &Matrix {
     type Output = Matrix;
 
     fn mul(self, rhs: &Matrix) -> Self::Output {
-        let mut out = Matrix::new(rhs.height(), self.width());
-        for y in 0..self.height() {
+        let mut out = Matrix::new(rhs.height(), self.width);
+        for y in 0..self.height {
             for x in 0..rhs.width() {
                 let mut sum = 0.0;
-                for i in 0..self.width() {
+                for i in 0..self.width {
                     sum += self[(y, i)] * rhs[(i, x)];
                 }
                 out[(y, x)] = sum;
@@ -134,6 +148,17 @@ impl Mul<&Tuple> for &Matrix {
     fn mul(self, rhs: &Tuple) -> Self::Output {
         let out = self * &Matrix::from_values(4, 1, vec![rhs.x(), rhs.y(), rhs.z(), rhs.w()]);
         Tuple::new(out[(0, 0)], out[(1, 0)], out[(2, 0)], out[(3, 0)])
+    }
+}
+
+impl Mul<f64> for &Matrix {
+    type Output = Matrix;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        let new_values = self.values.iter()
+            .map(|v| v * rhs)
+            .collect();
+        Matrix::from_values(self.height, self.width, new_values)
     }
 }
 
@@ -476,5 +501,130 @@ mod tests {
         assert_eq!(a.cofactor(0, 2), 210.0);
         assert_eq!(a.cofactor(0, 3), 51.0);
         assert_eq!(a.determinant(), -4071.0);
+    }
+
+    #[test]
+    fn is_invertible_returns_true_for_invertible_matrix() {
+        // Given
+        let a = Matrix::from_values(4, 4, vec![
+            6.0, 4.0, 4.0, 4.0, 
+            5.0, 5.0, 7.0, 6.0, 
+            4.0, -9.0, 3.0, -7.0, 
+            9.0, 1.0, 7.0, -6.0
+        ]);
+
+        // Then
+        assert_eq!(a.determinant(), -2120.0);
+        assert!(a.is_invertible());
+    }
+
+    #[test]
+    fn is_invertible_returns_false_for_non_invertible_matrix() {
+        // Given
+        let a = Matrix::from_values(4, 4, vec![
+            -4.0, 2.0, -2.0, -3.0, 
+            9.0, 6.0, 2.0, 6.0, 
+            0.0, -5.0, 1.0, -5.0, 
+            0.0, 0.0, 0.0, 0.0
+        ]);
+
+        // Then
+        assert_eq!(a.determinant(), 0.0);
+        assert!(!a.is_invertible());
+    }
+
+    #[test]
+    fn inverse_calculates_inverse() {
+        // Given
+        let a = Matrix::from_values(4, 4, vec![
+            -5.0, 2.0, 6.0, -8.0, 
+            1.0, -5.0, 1.0, 8.0, 
+            7.0, 7.0, -6.0, -7.0, 
+            1.0, -3.0, 7.0, 4.0
+        ]);
+
+        // When
+        let b = a.inverse();
+
+        // Then
+        assert_eq!(a.determinant(), 532.0);
+        assert_eq!(a.cofactor(2, 3), -160.0);
+        assert_eq!(b[(3, 2)], -160.0 / 532.0);
+        assert_eq!(a.cofactor(3, 2), 105.0);
+        assert_eq!(b[(2, 3)], 105.0 / 532.0);
+        assert_eq!(b, Matrix::from_values(4, 4, vec![
+            0.21805, 0.45113, 0.24060, -0.04511, 
+            -0.80827, -1.45677, -0.44361, 0.52068, 
+            -0.07895, -0.22368, -0.05263, 0.19737, 
+            -0.52256, -0.81391, -0.30075, 0.30639
+        ]));
+    }
+
+    #[test]
+    fn inverse_calculates_inverse_2() {
+        // Given
+        let a = Matrix::from_values(4, 4, vec![
+            8.0, -5.0, 9.0, 2.0, 
+            7.0, 5.0, 6.0, 1.0, 
+            -6.0, 0.0, 9.0, 6.0, 
+            -3.0, 0.0, -9.0, -4.0
+        ]);
+
+        // When
+        let b = a.inverse();
+
+        // Then
+        assert_eq!(b, Matrix::from_values(4, 4, vec![
+            -0.15385, -0.15385, -0.28205, -0.53846, 
+            -0.07692, 0.12308, 0.02564, 0.03077, 
+            0.35897, 0.35897, 0.43590, 0.92308, 
+            -0.69231, -0.69231, -0.76923, -1.92308
+        ]));
+    }
+
+    #[test]
+    fn inverse_calculates_inverse_3() {
+        // Given
+        let a = Matrix::from_values(4, 4, vec![
+            9.0, 3.0, 0.0, 9.0, 
+            -5.0, -2.0, -6.0, -3.0, 
+            -4.0, 9.0, 6.0, 4.0, 
+            -7.0, 6.0, 6.0, 2.0
+        ]);
+
+        // When
+        let b = a.inverse();
+
+        // Then
+        assert_eq!(b, Matrix::from_values(4, 4, vec![
+            -0.04074, -0.07778, 0.14444, -0.22222, 
+            -0.07778, 0.03333, 0.36667, -0.33333, 
+            -0.02901, -0.14630, -0.10926, 0.12963, 
+            0.17778, 0.06667, -0.26667, 0.33333
+        ]));
+    }
+
+    #[test]
+    fn mul_matrix_by_inverse_returns_identity_matrix() {
+        // Given
+        let a = Matrix::from_values(4, 4, vec![
+            3.0, -9.0, 7.0, 3.0, 
+            3.0, -8.0, 2.0, -9.0, 
+            -4.0, 4.0, 4.0, 1.0, 
+            -6.0, 5.0, -1.0, 1.0
+        ]);
+
+        let b = Matrix::from_values(4, 4, vec![
+            8.0, 2.0, 2.0, 2.0, 
+            3.0, -1.0, 7.0, 0.0, 
+            7.0, 0.0, 5.0, 4.0, 
+            6.0, -2.0, 0.0, 5.0
+        ]);
+
+        // When
+        let c = &a * &b;
+
+        // Then
+        assert_eq!(&c * &b.inverse(), a);
     }
 }
