@@ -5,7 +5,7 @@ use float_cmp::approx_eq;
 use super::tuple::Tuple;
 
 #[derive(Debug, Clone)]
-struct Matrix {
+pub struct Matrix {
     height: usize,
     width: usize,
     values: Vec<f64>
