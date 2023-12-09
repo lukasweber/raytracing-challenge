@@ -50,6 +50,17 @@ pub fn rotation_z(radians: f64) -> Matrix {
     out
 }
 
+pub fn shearing(xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Matrix {
+    let mut out = Matrix::identity(4, 4);
+    out[(0, 1)] = xy;
+    out[(0, 2)] = xz;
+    out[(1, 0)] = yx;
+    out[(1, 2)] = yz;
+    out[(2, 0)] = zx;
+    out[(2, 1)] = zy;
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use crate::raytracer::tuple::Tuple;
@@ -150,7 +161,7 @@ mod tests {
     }
 
     #[test]
-    fn rotate_point_around_x_axis() {
+    fn rotation_x_rotates_point_around_x_axis() {
         // Given
         let p = Tuple::point(0.0, 1.0, 0.0);
         let half_quarter = rotation_x(std::f64::consts::PI / 4.0);
@@ -180,7 +191,7 @@ mod tests {
     }
 
     #[test]
-    fn rotate_point_around_y_axis() {
+    fn rotation_y_rotates_point_around_y_axis() {
         // Given
         let p = Tuple::point(0.0, 0.0, 1.0);
         let half_quarter = rotation_y(std::f64::consts::PI / 4.0);
@@ -196,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    pub fn rotate_point_arround_z_axis() {
+    pub fn rotation_z_rotates_point_around_z_axis() {
         // Given
         let p = Tuple::point(0.0, 1.0, 0.0);
         let half_quarter = rotation_z(std::f64::consts::PI / 4.0);
@@ -209,5 +220,118 @@ mod tests {
         // Then
         assert_eq!(p2, Tuple::point(-2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0, 0.0));
         assert_eq!(p3, Tuple::point(-1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn shearing_moves_x_in_proportion_to_y() {
+        // Given
+        let transform = shearing(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        let p = Tuple::point(2.0, 3.0, 4.0);
+
+        // When
+        let p2 = &transform * &p;
+
+        // Then
+        assert_eq!(p2, Tuple::point(5.0, 3.0, 4.0));
+    }
+
+    #[test]
+    fn shearing_moves_x_in_proportion_to_z() {
+        // Given
+        let transform = shearing(0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
+        let p = Tuple::point(2.0, 3.0, 4.0);
+
+        // When
+        let p2 = &transform * &p;
+
+        // Then
+        assert_eq!(p2, Tuple::point(6.0, 3.0, 4.0));
+    }
+
+    #[test]
+    fn shearing_moves_y_in_proportion_to_x() {
+        // Given
+        let transform = shearing(0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+        let p = Tuple::point(2.0, 3.0, 4.0);
+
+        // When
+        let p2 = &transform * &p;
+
+        // Then
+        assert_eq!(p2, Tuple::point(2.0, 5.0, 4.0));
+    }
+
+    #[test]
+    fn shearing_moves_y_in_proportion_to_z() {
+        // Given
+        let transform = shearing(0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        let p = Tuple::point(2.0, 3.0, 4.0);
+
+        // When
+        let p2 = &transform * &p;
+
+        // Then
+        assert_eq!(p2, Tuple::point(2.0, 7.0, 4.0));
+    }
+    
+    #[test]
+    fn shearing_moves_z_in_proportion_to_x() {
+        // Given
+        let transform = shearing(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        let p = Tuple::point(2.0, 3.0, 4.0);
+
+        // When
+        let p2 = &transform * &p;
+
+        // Then
+        assert_eq!(p2, Tuple::point(2.0, 3.0, 6.0));
+    }
+
+    #[test]
+    fn shearing_moves_z_in_proportion_to_y() {
+        // Given
+        let transform = shearing(0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        let p = Tuple::point(2.0, 3.0, 4.0);
+
+        // When
+        let p2 = &transform * &p;
+
+        // Then
+        assert_eq!(p2, Tuple::point(2.0, 3.0, 7.0));
+    }
+
+    #[test]
+    fn individual_transformations_applied_in_sequence() {
+        // Given
+        let p = Tuple::point(1.0, 0.0, 1.0);
+        let a = rotation_x(std::f64::consts::PI / 2.0);
+        let b = scaling(5.0, 5.0, 5.0);
+        let c = translation(10.0, 5.0, 7.0);
+
+        // When
+        let p2 = &a * &p;
+        let p3 = &b * &p2;
+        let p4 = &c * &p3;
+
+        // Then
+        assert_eq!(p2, Tuple::point(1.0, -1.0, 0.0));
+        assert_eq!(p3, Tuple::point(5.0, -5.0, 0.0));
+        assert_eq!(p4, Tuple::point(15.0, 0.0, 7.0));
+    }
+
+    #[test]
+    fn chained_transformations_applied_in_reverse_order() {
+        // Given
+        let p = Tuple::point(1.0, 0.0, 1.0);
+        let a = rotation_x(std::f64::consts::PI / 2.0);
+        let b = scaling(5.0, 5.0, 5.0);
+        let c = translation(10.0, 5.0, 7.0);
+        let t = &c * &b * &a;
+
+        // When
+        let p2 = &t * &p;
+
+        // Then
+        assert_eq!(p2, Tuple::point(15.0, 0.0, 7.0));
     }
 }
