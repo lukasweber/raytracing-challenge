@@ -1,26 +1,35 @@
 use std::{fs::File, io::BufWriter};
 
-use raytracer::tuple::Tuple;
+use raytracer::{tuple::Tuple, matrix::Matrix};
 
 use crate::raytracer::{canvas::Canvas, color::Color, exporter::{PPMExporter, Exporter}};
 
 mod raytracer;
 
 fn main() {
-    let mut p = Projectile { position: Tuple::point(0.0, 1.0, 0.0), velocity: Tuple::vector(1.0, 1.8, 0.0).normalize() * 11.25 };
-    let e = Environment { gravity: Tuple::vector(0.0, -0.1, 0.0), wind: Tuple::vector(-0.01, 0.0, 0.0) };
-    let mut c = Canvas::new(900, 550);
+    let mut points: Vec<Tuple> = vec![];
+    let ref_point = Tuple::point(0.0, 0.0, 1.0);
 
-    println!("{}", p.position);
-    while p.position.y() > 0.0 {
-        p = tick(&e, p);
-        let target_x = p.position.x().round() as usize;
-        let target_y = c.height() - (p.position.y().round() as usize);
-        if target_y < c.height() && target_x < c.width() {
-            c.write_pixel(target_x, target_y, Color::new(255.0, 0.0, 0.0));
-        }
-        println!("{}", p.position);
+    for i in 0..12 {
+        let p = &Matrix::identity(4, 4)
+            .rotate_y(f64::from(i) * std::f64::consts::PI/6.0) * &ref_point;
+
+        points.push(p);
     }
+
+    let mut canvas = Canvas::new(200, 200);
+    let half_canvas = canvas.width() as f64 / 2.0;
+    let margin = 20.0;
+    for p in points {
+        let x = (half_canvas + p.x() * (half_canvas - margin)).round() as usize;
+        let y = (half_canvas + p.z() * (half_canvas - margin)).round() as usize;
+        canvas.write_pixel(x, y, Color::new(255.0, 255.0, 255.0));
+    }
+
+    export_ppm(&canvas);
+}
+
+fn export_ppm(c: &Canvas) {
     let exporter = PPMExporter::new();
     let file= File::create("out.ppm").unwrap();
     let mut writer = BufWriter::new(file);
@@ -31,7 +40,7 @@ fn main() {
     exporter.export(&c, &mut writer).unwrap();
 
     let elapsed = now.elapsed();
-    println!("Elapsed: {:.2?}", elapsed);
+    println!("Exporting took: {:.2?}", elapsed);
 }
 
 struct Projectile {
