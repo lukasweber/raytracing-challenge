@@ -2,7 +2,7 @@ use std::ops::{Index, IndexMut, Mul};
 
 use float_cmp::approx_eq;
 
-use super::tuple::Tuple;
+use super::{tuple::Tuple, transformation};
 
 #[derive(Debug, Clone)]
 pub struct Matrix {
@@ -98,6 +98,30 @@ impl Matrix {
         let cofactor_matrix_t = cofactor_matrix.transpose();
         &cofactor_matrix_t * (1.0 / self.determinant())
     }
+
+    pub fn translate(&self, x: f64, y: f64, z: f64) -> Matrix {
+        transformation::translation(x, y, z) * self
+    }
+
+    pub fn scale(&self, x: f64, y: f64, z: f64) -> Matrix {
+        transformation::scaling(x, y, z) * self
+    }
+
+    pub fn rotate_x(&self, radians: f64) -> Matrix {
+        transformation::rotation_x(radians) * self
+    }
+
+    pub fn rotate_y(&self, radians: f64) -> Matrix {
+        transformation::rotation_y(radians) * self
+    }
+
+    pub fn rotate_z(&self, radians: f64) -> Matrix {
+        transformation::rotation_z(radians) * self
+    }
+
+    pub fn shear(&self, xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Matrix {
+        transformation::shearing(xy, xz, yx, yz, zx, zy) * self
+    }
 }
 
 impl Index<(usize, usize)> for Matrix {
@@ -139,6 +163,22 @@ impl Mul<&Matrix> for &Matrix {
             }
         }
         out
+    }
+}
+
+impl Mul<&Matrix> for Matrix {
+    type Output = Matrix;
+
+    fn mul(self, rhs: &Matrix) -> Self::Output {
+        &self * rhs
+    }
+}
+
+impl Mul<Matrix> for &Matrix {
+    type Output = Matrix;
+
+    fn mul(self, rhs: Matrix) -> Self::Output {
+        self * &rhs
     }
 }
 
@@ -626,5 +666,20 @@ mod tests {
 
         // Then
         assert_eq!(&c * &b.inverse(), a);
+    }
+
+    #[test]
+    fn fluent_api_chains_transformations() {
+        // Given
+        let p = Tuple::point(1.0, 0.0, 1.0);
+
+        // When
+        let t = Matrix::identity(4, 4)
+            .rotate_x(std::f64::consts::PI / 2.0)
+            .scale(5.0, 5.0, 5.0)
+            .translate(10.0, 5.0, 7.0);
+
+        // Then
+        assert_eq!(&t * &p, Tuple::point(15.0, 0.0, 7.0));
     }
 }
