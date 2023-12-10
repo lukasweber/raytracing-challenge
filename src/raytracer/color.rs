@@ -46,7 +46,7 @@ impl ops::Add<&Color> for Color {
     type Output = Color;
 
     fn add(self, other: &Color) -> Color {
-        Color { tuple: self.tuple + &other.tuple }
+        Color { tuple: &self.tuple + &other.tuple }
     }
 }
 
@@ -54,7 +54,7 @@ impl ops::Sub<&Color> for Color {
     type Output = Color;
 
     fn sub(self, other: &Color) -> Color {
-        Color { tuple: self.tuple - &other.tuple }
+        Color { tuple: &self.tuple - &other.tuple }
     }
 }
 

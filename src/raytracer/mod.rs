@@ -4,3 +4,4 @@ pub mod color;
 pub mod canvas;
 pub mod exporter;
 pub mod transformation;
+pub mod ray;

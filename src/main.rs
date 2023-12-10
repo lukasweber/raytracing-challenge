@@ -42,19 +42,3 @@ fn export_ppm(c: &Canvas) {
     let elapsed = now.elapsed();
     println!("Exporting took: {:.2?}", elapsed);
 }
-
-struct Projectile {
-    position: Tuple,
-    velocity: Tuple
-}
-
-struct Environment {
-    gravity: Tuple,
-    wind: Tuple
-}
-
-fn tick(env: &Environment, proj: Projectile) -> Projectile {
-    let position = proj.position + &proj.velocity;
-    let velocity = proj.velocity + &env.gravity + &env.wind;
-    Projectile { position, velocity }
-}

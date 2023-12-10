@@ -78,19 +78,57 @@ impl PartialEq for Tuple {
     }
 }
 
+// Add Operator
+
+impl ops::Add<&Tuple> for &Tuple {
+    type Output = Tuple;
+
+    fn add(self, rhs: &Tuple) -> Self::Output {
+        Tuple { x: self.x + rhs.x, y: self.y + rhs.y, z: self.z + rhs.z, w: self.w + rhs.w }
+    }
+}
+
 impl ops::Add<&Tuple> for Tuple {
     type Output = Tuple;
 
-    fn add(self, rhs: &Self) -> Self::Output {
-        Tuple { x: self.x + rhs.x, y: self.y + rhs.y, z: self.z + rhs.z, w: self.w + rhs.w }
+    fn add(self, rhs: &Tuple) -> Self::Output {
+        &self + rhs
+    }
+}
+
+impl ops::Add<Tuple> for &Tuple {
+    type Output = Tuple;
+
+    fn add(self, rhs: Tuple) -> Self::Output {
+        self + &rhs
+    }
+}
+
+// Sub Operator
+
+impl ops::Sub<&Tuple> for &Tuple {
+    type Output = Tuple;
+
+    fn sub(self, rhs: &Tuple) -> Self::Output {
+        Tuple { x: self.x - rhs.x, y: self.y - rhs.y, z: self.z - rhs.z, w: self.w - rhs.w }
     }
 }
 
 impl ops::Sub<&Tuple> for Tuple {
     type Output = Tuple;
 
-    fn sub(self, rhs: &Self) -> Self::Output {
-        Self { x: self.x - rhs.x, y: self.y - rhs.y, z: self.z - rhs.z, w: self.w - rhs.w }
+    fn sub(self, rhs: &Tuple) -> Self::Output {
+        &self - rhs
+    }
+}
+
+// Neg
+
+impl ops::Neg for &Tuple {
+    type Output = Tuple;
+
+    fn neg(self) -> Self::Output {
+        Tuple { x: -self.x, y: -self.y, z: -self.z, w: -self.w }
     }
 }
 
@@ -98,7 +136,17 @@ impl ops::Neg for Tuple {
     type Output = Tuple;
 
     fn neg(self) -> Self::Output {
-        Self { x: -self.x, y: -self.y, z: -self.z, w: -self.w }
+        -&self
+    }
+}
+
+// Mul Operator
+
+impl ops::Mul<f64> for &Tuple {
+    type Output = Tuple;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Tuple { x: self.x * rhs, y: self.y * rhs, z: self.z * rhs, w: self.w * rhs }
     }
 }
 
@@ -106,7 +154,17 @@ impl ops::Mul<f64> for Tuple {
     type Output = Tuple;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        Self { x: self.x * rhs, y: self.y * rhs, z: self.z * rhs, w: self.w * rhs }
+        &self * rhs
+    }
+}
+
+// Div Operator
+
+impl ops::Div<f64> for &Tuple {
+    type Output = Tuple;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        Tuple { x: self.x / rhs, y: self.y / rhs, z: self.z / rhs, w: self.w / rhs }
     }
 }
 
@@ -114,7 +172,7 @@ impl ops::Div<f64> for Tuple {
     type Output = Tuple;
 
     fn div(self, rhs: f64) -> Self::Output {
-        Self { x: self.x / rhs, y: self.y / rhs, z: self.z / rhs, w: self.w / rhs }
+        &self / rhs
     }
 }
 
@@ -184,7 +242,7 @@ mod tests {
         let a2 = Tuple::new(-2.0, 3.0, 1.0, 0.0);
 
         // When
-        let a3 = a1 + &a2;
+        let a3 = &a1 + &a2;
 
         // Then
         assert_eq!(a3, Tuple::new(1.0, 1.0, 6.0, 1.0));
@@ -197,7 +255,7 @@ mod tests {
         let a2 = Tuple::point(5.0, 6.0, 7.0);
 
         // When
-        let a3 = a1 - &a2;
+        let a3 = &a1 - &a2;
 
         // Then
         assert_eq!(a3, Tuple::vector(-2.0, -4.0, -6.0));
@@ -210,7 +268,7 @@ mod tests {
         let v = Tuple::vector(5.0, 6.0, 7.0);
 
         // When
-        let a3 = p - &v;
+        let a3 = &p - &v;
 
         // Then
         assert_eq!(a3, Tuple::point(-2.0, -4.0, -6.0));
@@ -223,7 +281,7 @@ mod tests {
         let v2 = Tuple::vector(5.0, 6.0, 7.0);
 
         // When
-        let a3 = v1 - &v2;
+        let a3 = &v1 - &v2;
 
         // Then
         assert_eq!(a3, Tuple::vector(-2.0, -4.0, -6.0));
@@ -236,7 +294,7 @@ mod tests {
         let v = Tuple::vector(1.0, -2.0, 3.0);
 
         // When
-        let a3 = zero - &v;
+        let a3 = &zero - &v;
 
         // Then
         assert_eq!(a3, Tuple::vector(-1.0, 2.0, -3.0));
@@ -248,7 +306,7 @@ mod tests {
         let a = Tuple::new(1.0, -2.0, 3.0, -4.0);
 
         // When
-        let a2 = -a;
+        let a2 = -&a;
 
         // Then
         assert_eq!(a2, Tuple::new(-1.0, 2.0, -3.0, 4.0));
@@ -260,7 +318,7 @@ mod tests {
         let a = Tuple::new(1.0, -2.0, 3.0, -4.0);
 
         // When
-        let a2 = a * 3.5;
+        let a2 = &a * 3.5;
 
         // Then
         assert_eq!(a2, Tuple::new(3.5, -7.0, 10.5, -14.0))
@@ -272,7 +330,7 @@ mod tests {
         let a = Tuple::new(1.0, -2.0, 3.0, -4.0);
 
         // When
-        let a2 = a * 0.5;
+        let a2 = &a * 0.5;
 
         // Then
         assert_eq!(a2, Tuple::new(0.5, -1.0, 1.5, -2.0))
