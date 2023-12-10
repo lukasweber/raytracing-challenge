@@ -42,7 +42,9 @@ impl PartialEq for Color {
     }
 }
 
-impl ops::Add<&Color> for Color {
+// Add Operator
+
+impl ops::Add<&Color> for &Color {
     type Output = Color;
 
     fn add(self, other: &Color) -> Color {
@@ -50,13 +52,49 @@ impl ops::Add<&Color> for Color {
     }
 }
 
-impl ops::Sub<&Color> for Color {
+impl ops::Add<&Color> for Color {
+    type Output = Color;
+
+    fn add(self, other: &Color) -> Color {
+        &self + other
+    }
+}
+
+impl ops::Add<Color> for &Color {
+    type Output = Color;
+
+    fn add(self, other: Color) -> Color {
+        self + &other
+    }
+}
+
+// Sub Operator
+
+impl ops::Sub for &Color {
     type Output = Color;
 
     fn sub(self, other: &Color) -> Color {
         Color { tuple: &self.tuple - &other.tuple }
     }
 }
+
+impl ops::Sub<&Color> for Color {
+    type Output = Color;
+
+    fn sub(self, other: &Color) -> Color {
+        &self - other
+    }
+}
+
+impl ops::Sub<Color> for &Color {
+    type Output = Color;
+
+    fn sub(self, other: Color) -> Color {
+        self - &other
+    }
+}
+
+// Mul Operator
 
 impl ops::Mul<f64> for Color {
     type Output = Color;

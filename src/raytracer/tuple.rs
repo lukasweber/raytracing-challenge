@@ -122,7 +122,7 @@ impl ops::Sub<&Tuple> for Tuple {
     }
 }
 
-// Neg
+// Neg Operator
 
 impl ops::Neg for &Tuple {
     type Output = Tuple;
