@@ -6,8 +6,8 @@ pub struct Sphere {
     transform: Matrix
 }
 
-impl Sphere {
-    pub fn intersects(&self, ray: &Ray) -> Vec<Intersection> {
+impl Object for Sphere {
+    fn intersects(&self, ray: &Ray) -> Vec<Intersection> {
         let ray = ray.transform(&self.transform.inverse());
 
         let sphere_to_ray = ray.origin() - &Tuple::point(0.0, 0.0, 0.0);
@@ -29,24 +29,22 @@ impl Sphere {
         vec![t1_intersection, t2_intersection]
     }
 
-    pub fn transform(&self) -> &Matrix {
+    fn transform(&self) -> &Matrix {
         &self.transform
     }
 
-    pub fn set_transform(&mut self, transform: Matrix) {
+    fn set_transform(&mut self, transform: Matrix) {
         self.transform = transform;
     }
 
-    pub fn normal_at(&self, point: Tuple) -> Tuple {
-        let object_point = &self.transform.inverse() * &point;
+    fn normal_at(&self, point: &Tuple) -> Tuple {
+        let object_point = &self.transform.inverse() * point;
         let object_normal = &object_point - &Tuple::point(0.0, 0.0, 0.0);
         let world_normal = &self.transform.inverse().transpose() * &object_normal;
         let world_normal = Tuple::vector(world_normal.x(), world_normal.y(), world_normal.z());
         world_normal.normalize()
     }
 }
-
-impl Object for Sphere { }
 
 impl Default for Sphere {
     fn default() -> Sphere {
@@ -195,7 +193,7 @@ mod tests {
     fn normal_at_point_on_x_axis() {
         // Given
         let s = Sphere::default();
-        let n = s.normal_at(Tuple::point(1.0, 0.0, 0.0));
+        let n = s.normal_at(&Tuple::point(1.0, 0.0, 0.0));
 
         // When & Then
         assert_eq!(n, Tuple::vector(1.0, 0.0, 0.0));
@@ -205,7 +203,7 @@ mod tests {
     fn normal_at_point_on_y_axis() {
         // Given
         let s = Sphere::default();
-        let n = s.normal_at(Tuple::point(0.0, 1.0, 0.0));
+        let n = s.normal_at(&Tuple::point(0.0, 1.0, 0.0));
 
         // When & Then
         assert_eq!(n, Tuple::vector(0.0, 1.0, 0.0));
@@ -215,7 +213,7 @@ mod tests {
     fn normal_at_point_on_z_axis() {
         // Given
         let s = Sphere::default();
-        let n = s.normal_at(Tuple::point(0.0, 0.0, 1.0));
+        let n = s.normal_at(&Tuple::point(0.0, 0.0, 1.0));
 
         // When & Then
         assert_eq!(n, Tuple::vector(0.0, 0.0, 1.0));
@@ -225,7 +223,7 @@ mod tests {
     fn normal_at_non_axial_point() {
         // Given
         let s = Sphere::default();
-        let n = s.normal_at(Tuple::point(f64::sqrt(3.0) / 3.0, f64::sqrt(3.0) / 3.0, f64::sqrt(3.0) / 3.0));
+        let n = s.normal_at(&Tuple::point(f64::sqrt(3.0) / 3.0, f64::sqrt(3.0) / 3.0, f64::sqrt(3.0) / 3.0));
 
         // When & Then
         assert_eq!(n, Tuple::vector(f64::sqrt(3.0) / 3.0, f64::sqrt(3.0) / 3.0, f64::sqrt(3.0) / 3.0));
@@ -235,7 +233,7 @@ mod tests {
     fn normal_is_normalized() {
         // Given
         let s = Sphere::default();
-        let n = s.normal_at(Tuple::point(f64::sqrt(3.0) / 3.0, f64::sqrt(3.0) / 3.0, f64::sqrt(3.0) / 3.0));
+        let n = s.normal_at(&Tuple::point(f64::sqrt(3.0) / 3.0, f64::sqrt(3.0) / 3.0, f64::sqrt(3.0) / 3.0));
 
         // When & Then
         assert_eq!(n, n.normalize());
@@ -250,7 +248,7 @@ mod tests {
         );
         
         // When
-        let n = s.normal_at(Tuple::point(0.0, 1.70711, -0.70711));
+        let n = s.normal_at(&Tuple::point(0.0, 1.70711, -0.70711));
 
         // Then
         assert_eq!(n, Tuple::vector(0.0, 0.70711, -0.70711));
@@ -265,7 +263,7 @@ mod tests {
         );
         
         // When
-        let n = s.normal_at(Tuple::point(0.0, f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0));
+        let n = s.normal_at(&Tuple::point(0.0, f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0));
 
         // Then
         assert_eq!(n, Tuple::vector(0.0, 0.97014, -0.24254));

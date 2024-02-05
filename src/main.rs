@@ -1,6 +1,6 @@
 use std::{fs::File, io::BufWriter};
 
-use raytracer::{objects::{ray::Ray, sphere::Sphere}, transformation, tuple::Tuple};
+use raytracer::{objects::{object::Object, ray::Ray, sphere::Sphere}, transformation, tuple::Tuple};
 
 use crate::raytracer::{canvas::Canvas, color::Color, exporter::{PPMExporter, Exporter}};
 
