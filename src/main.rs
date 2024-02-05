@@ -1,29 +1,31 @@
 use std::{fs::File, io::BufWriter};
 
-use raytracer::{tuple::Tuple, matrix::Matrix};
+use raytracer::{objects::{ray::Ray, sphere::Sphere}, transformation, tuple::Tuple};
 
 use crate::raytracer::{canvas::Canvas, color::Color, exporter::{PPMExporter, Exporter}};
 
 mod raytracer;
 
 fn main() {
-    let mut points: Vec<Tuple> = vec![];
-    let ref_point = Tuple::point(0.0, 0.0, 1.0);
-
-    for i in 0..12 {
-        let p = &Matrix::identity(4, 4)
-            .rotate_y(f64::from(i) * std::f64::consts::PI/6.0) * &ref_point;
-
-        points.push(p);
-    }
-
     let mut canvas = Canvas::new(200, 200);
     let half_canvas = canvas.width() as f64 / 2.0;
-    let margin = 20.0;
-    for p in points {
-        let x = (half_canvas + p.x() * (half_canvas - margin)).round() as usize;
-        let y = (half_canvas + p.z() * (half_canvas - margin)).round() as usize;
-        canvas.write_pixel(x, y, Color::new(255.0, 255.0, 255.0));
+
+    let mut s = Sphere::default();
+    let m = transformation::scaling(30.0, 30.0, 30.0)
+        .translate(half_canvas, half_canvas, 0.0);
+
+    s.set_transform(m);
+
+    for x in 0..canvas.width() {
+        for y in 0..canvas.height() {
+            let ray = Ray::new(Tuple::point(x as f64, y as f64, 0.0), Tuple::vector(0.0, 0.0, 20.0));
+            let intersects = s.intersects(&ray);
+            if intersects.len() == 0 {
+                canvas.write_pixel(x, y, Color::new(1.0, 1.0, 1.0));
+            } else {
+                canvas.write_pixel(x, y, Color::new(1.0, 0.0, 0.0));
+            }
+        }
     }
 
     export_ppm(&canvas);

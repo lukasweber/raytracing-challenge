@@ -67,6 +67,10 @@ impl Tuple {
             self.x * other.y - self.y * other.x,
         )
     }
+
+    pub fn reflect(&self, n: &Tuple) -> Tuple {
+        self - &(&(n * 2.0) * self.dot(n))
+    }
 }
 
 impl PartialEq for Tuple {
@@ -391,5 +395,31 @@ mod tests {
         // When & Then
         assert_eq!(a.cross(&b), Tuple::vector(-1.0, 2.0, -1.0));
         assert_eq!(b.cross(&a), Tuple::vector(1.0, -2.0, 1.0));
+    }
+
+    #[test]
+    fn reflecting_vector_approaching_at_45_degrees() {
+        // Given
+        let v = Tuple::vector(1.0, -1.0, 0.0);
+        let n = Tuple::vector(0.0, 1.0, 0.0);
+
+        // When
+        let r = v.reflect(&n);
+
+        // Then
+        assert_eq!(r, Tuple::vector(1.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn reflecting_vector_off_slanted_surface() {
+        // Given
+        let v = Tuple::vector(0.0, -1.0, 0.0);
+        let n = Tuple::vector(f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0, 0.0);
+
+        // When
+        let r = v.reflect(&n);
+
+        // Then
+        assert_eq!(r, Tuple::vector(1.0, 0.0, 0.0));
     }
 }
