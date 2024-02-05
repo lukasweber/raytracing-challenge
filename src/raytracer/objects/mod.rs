@@ -1,4 +1,5 @@
 pub mod object;
 pub mod sphere;
 pub mod intersection;
-pub mod ray;
+pub mod lights;
+pub mod materials;

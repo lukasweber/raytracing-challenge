@@ -1,9 +1,10 @@
-use crate::raytracer::{matrix::Matrix, tuple::Tuple};
+use crate::raytracer::{matrix::Matrix, ray::Ray, tuple::Tuple};
 
-use super::{ray::Ray, object::Object, intersection::Intersection};
+use super::{intersection::Intersection, materials::Material, object::Object};
 
 pub struct Sphere { 
-    transform: Matrix
+    transform: Matrix,
+    material: Material
 }
 
 impl Object for Sphere {
@@ -37,6 +38,14 @@ impl Object for Sphere {
         self.transform = transform;
     }
 
+    fn material(&self) -> &Material {
+        &self.material
+    }
+
+    fn set_material(&mut self, material: Material) {
+        self.material = material;
+    }
+
     fn normal_at(&self, point: &Tuple) -> Tuple {
         let object_point = &self.transform.inverse() * point;
         let object_normal = &object_point - &Tuple::point(0.0, 0.0, 0.0);
@@ -48,7 +57,7 @@ impl Object for Sphere {
 
 impl Default for Sphere {
     fn default() -> Sphere {
-        Self { transform: Matrix::identity(4, 4) }
+        Self { transform: Matrix::identity(4, 4), material: Material::default() }
     }
 }
 
@@ -56,7 +65,7 @@ impl Default for Sphere {
 mod tests {
     use std::f64::consts::PI;
 
-    use crate::raytracer::transformation;
+    use crate::raytracer::{color::Color, transformation};
 
     use super::*;
 
@@ -267,5 +276,30 @@ mod tests {
 
         // Then
         assert_eq!(n, Tuple::vector(0.0, 0.97014, -0.24254));
+    }
+
+    #[test]
+    fn material_returns_default() {
+        // Given
+        let s = Sphere::default();
+
+        // When
+        let m = s.material();
+
+        // Then
+        assert_eq!(m, &Material::default());
+    }
+
+    #[test]
+    fn set_material_sets_member() {
+        // Given
+        let mut s = Sphere::default();
+        let m = Material::new(Color::new(0.0, 0.0, 0.0), 1.0, 0.0, 0.0, 0.0);
+
+        // When
+        s.set_material(m.clone());
+
+        // Then
+        assert_eq!(s.material(), &m);
     }
 }

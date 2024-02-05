@@ -104,7 +104,23 @@ impl ops::Mul<f64> for Color {
     }
 }
 
+impl ops::Mul<f64> for &Color {
+    type Output = Color;
+
+    fn mul(self, rhs: f64) -> Color {
+        Color { tuple: &self.tuple * rhs }
+    }
+}
+
 impl ops::Mul<&Color> for Color {
+    type Output = Color;
+
+    fn mul(self, rhs: &Color) -> Color {
+        Color::new(self.red() * rhs.red(), self.green() * rhs.green(), self.blue() * rhs.blue())
+    }
+}
+
+impl ops::Mul<&Color> for &Color {
     type Output = Color;
 
     fn mul(self, rhs: &Color) -> Color {
